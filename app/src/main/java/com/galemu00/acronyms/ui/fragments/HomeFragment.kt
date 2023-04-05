@@ -1,11 +1,13 @@
 package com.galemu00.acronyms.ui.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -48,22 +50,59 @@ class HomeFragment : Fragment(R.layout.fragment_home),
                     // TODO loading view
                 }
                 is Resource.Success -> {
-                    showListItems()
-                    response.data?.forEach { acronymItem ->
-                        adapter.differ.submitList(acronymItem.lfs)
+
+                    binding.emptyBackground.visibility = View.GONE
+                    binding.recyclerView.visibility = View.VISIBLE
+                    binding.emptyResult.visibility = View.GONE
+
+                    hideKeyboard()
+
+                    if ((response.data != null) && (response.data.size > 0)) {
+                        response.data.forEach { acronymItem ->
+                            adapter.differ.submitList(acronymItem.lfs)
+                        }
+                    } else {
+                        // TODO show empty list
+                        Toast.makeText(context, "empty list", Toast.LENGTH_SHORT).show()
+                        // hide the resycler view
+                        // hide the bank screen
+                        // show text for empty list
+                        binding.recyclerView.visibility = View.GONE
+                        binding.emptyBackground.visibility = View.GONE
+                        binding.emptyResult.visibility = View.VISIBLE
                     }
-                    // TODO show empty list
                 }
                 is Resource.Error -> {
                     // TODO show error
                 }
+                is Resource.Idel -> {
+                    if (adapter.differ.currentList.isNotEmpty()){
+                        adapter.differ.submitList(ArrayList<Lf>())
+                    }
+
+                }
                 else -> {
-                    emptyList()
+
+                    Toast.makeText(
+                        context, "back to empty ${adapter.differ.currentList.size}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    binding.emptyBackground.visibility = View.VISIBLE
+                    binding.recyclerView.visibility = View.GONE
+                    binding.emptyResult.visibility = View.GONE
+
+
                 }
             }
         }
 
         return binding.root
+    }
+
+    private fun hideKeyboard() {
+        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as
+                InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
 
 
@@ -80,26 +119,17 @@ class HomeFragment : Fragment(R.layout.fragment_home),
     }
 
     override fun onClose(): Boolean {
-        adapter.differ.submitList(ArrayList<Lf>())
-        emptyList()
-        binding.searchBox.clearFocus()
+        viewModel.clearResults()
+        binding.emptyBackground.visibility = View.VISIBLE
+        binding.recyclerView.visibility = View.GONE
+        binding.emptyResult.visibility = View.GONE
+
+        hideKeyboard()
+
         return true
     }
 
-    private fun showListItems() {
-        binding.emptyBackground.visibility = View.GONE
-        binding.recyclerView.visibility = View.VISIBLE
-        binding.searchBox.clearFocus()
-        binding.recyclerView.isFocusable = true
-    }
-
-    private fun emptyList() {
-        binding.emptyBackground.visibility = View.VISIBLE
-        binding.recyclerView.visibility = View.GONE
-    }
-
     override fun onQueryTextSubmit(query: String?): Boolean {
-        Toast.makeText(context, "on query submitted", Toast.LENGTH_SHORT).show()
         // search method
         query?.let { search ->
             viewModel.getAcronyms(search)
@@ -108,7 +138,6 @@ class HomeFragment : Fragment(R.layout.fragment_home),
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        //Toast.makeText(context, "text changes", Toast.LENGTH_SHORT).show()
         return false
     }
 

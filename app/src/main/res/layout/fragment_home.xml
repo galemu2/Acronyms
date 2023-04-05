@@ -12,8 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:imeOptions="actionGo"
-        android:inputType="text"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="8dp"
@@ -42,10 +40,27 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="2dp"
-        tools:listitem="@layout/item_acronym"
+        android:background="@android:color/transparent"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:itemCount="15"
-        tools:visibility="visible" />
+        tools:listitem="@layout/item_acronym"
+        tools:visibility="gone" />
 
+    <TextView
+        android:id="@+id/empty_result"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/search_box"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="8dp"
+        android:gravity="center"
+        android:text="@string/empty_result"
+        android:textColor="@color/white"
+        android:textSize="48sp"
+        android:src="@drawable/outline_gesture"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 </RelativeLayout>

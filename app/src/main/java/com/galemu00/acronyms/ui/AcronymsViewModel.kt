@@ -23,7 +23,13 @@ class AcronymsViewModel(private val repository: AcronymRepository = AcronymRepos
         }
     }
 
-    private fun handleResponse(response: Response<Acronyms>): Resource<Acronyms>? {
+    fun clearResults() {
+        viewModelScope.launch(Dispatchers.Main) {
+            acronymList.postValue(Resource.Idel())
+        }
+    }
+
+    private fun handleResponse(response: Response<Acronyms>): Resource<Acronyms> {
         if (response.isSuccessful) {
             response.body()?.let { acronyms ->
                 return Resource.Success(acronyms)

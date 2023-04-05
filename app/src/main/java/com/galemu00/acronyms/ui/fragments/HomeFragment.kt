@@ -1,9 +1,12 @@
 package com.galemu00.acronyms.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -16,7 +19,7 @@ import com.galemu00.acronyms.ui.AcronymsViewModel
 import com.galemu00.acronyms.util.Resource
 
 class HomeFragment : Fragment(R.layout.fragment_home),
-    View.OnClickListener, SearchView.OnCloseListener {
+    View.OnClickListener, SearchView.OnCloseListener, SearchView.OnQueryTextListener {
 
     private val viewModel: AcronymsViewModel by viewModels()
     private var _binding: FragmentHomeBinding? = null
@@ -37,12 +40,11 @@ class HomeFragment : Fragment(R.layout.fragment_home),
 
         binding.searchBox.setOnCloseListener(this)
         binding.searchBox.setOnSearchClickListener(this)
+        binding.searchBox.setOnQueryTextListener(this)
 
-        // search method
-        viewModel.getAcronyms("HMM")
         viewModel.acronymList.observe(viewLifecycleOwner) { response ->
             when (response) {
-                is Resource.Loading ->{
+                is Resource.Loading -> {
                     // TODO loading view
                 }
                 is Resource.Success -> {
@@ -52,7 +54,7 @@ class HomeFragment : Fragment(R.layout.fragment_home),
                     }
                     // TODO show empty list
                 }
-                is Resource.Error ->{
+                is Resource.Error -> {
                     // TODO show error
                 }
                 else -> {
@@ -87,10 +89,27 @@ class HomeFragment : Fragment(R.layout.fragment_home),
     private fun showListItems() {
         binding.emptyBackground.visibility = View.GONE
         binding.recyclerView.visibility = View.VISIBLE
+        binding.searchBox.clearFocus()
+        binding.recyclerView.isFocusable = true
     }
 
     private fun emptyList() {
         binding.emptyBackground.visibility = View.VISIBLE
         binding.recyclerView.visibility = View.GONE
     }
+
+    override fun onQueryTextSubmit(query: String?): Boolean {
+        Toast.makeText(context, "on query submitted", Toast.LENGTH_SHORT).show()
+        // search method
+        query?.let { search ->
+            viewModel.getAcronyms(search)
+        }
+        return true
+    }
+
+    override fun onQueryTextChange(newText: String?): Boolean {
+        //Toast.makeText(context, "text changes", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
 }

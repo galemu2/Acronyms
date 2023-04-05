@@ -1,4 +1,4 @@
 # Acronyms
 
-> [!Reference]
-> http://www.nactem.ac.uk/software/acromine/rest.html
+
+> Reference used: http://www.nactem.ac.uk/software/acromine/rest.html

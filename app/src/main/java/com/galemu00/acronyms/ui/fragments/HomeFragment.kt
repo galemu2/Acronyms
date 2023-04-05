@@ -37,22 +37,26 @@ class HomeFragment : Fragment(R.layout.fragment_home),
 
         binding.searchBox.setOnCloseListener(this)
         binding.searchBox.setOnSearchClickListener(this)
+
+        // search method
         viewModel.getAcronyms("HMM")
         viewModel.acronymList.observe(viewLifecycleOwner) { response ->
             when (response) {
                 is Resource.Loading ->{
-
+                    // TODO loading view
                 }
                 is Resource.Success -> {
-                    binding.emptyBackground.visibility = View.GONE
-                    binding.recyclerView.visibility = View.VISIBLE
+                    showListItems()
                     response.data?.forEach { acronymItem ->
                         adapter.differ.submitList(acronymItem.lfs)
                     }
+                    // TODO show empty list
+                }
+                is Resource.Error ->{
+                    // TODO show error
                 }
                 else -> {
-                    binding.emptyBackground.visibility = View.VISIBLE
-                    binding.recyclerView.visibility = View.GONE
+                    emptyList()
                 }
             }
         }
@@ -75,9 +79,18 @@ class HomeFragment : Fragment(R.layout.fragment_home),
 
     override fun onClose(): Boolean {
         adapter.differ.submitList(ArrayList<Lf>())
-        binding.emptyBackground.visibility = View.VISIBLE
-        binding.recyclerView.visibility = View.GONE
+        emptyList()
         binding.searchBox.clearFocus()
         return true
+    }
+
+    private fun showListItems() {
+        binding.emptyBackground.visibility = View.GONE
+        binding.recyclerView.visibility = View.VISIBLE
+    }
+
+    private fun emptyList() {
+        binding.emptyBackground.visibility = View.VISIBLE
+        binding.recyclerView.visibility = View.GONE
     }
 }

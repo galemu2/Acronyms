@@ -6,4 +6,5 @@
     <string name="empty_screen">Empty screen</string>
 
     <string name="empty_result">Empty result</string>
+    <string name="error">Error</string>
 </resources>

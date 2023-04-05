@@ -1,9 +1,9 @@
 package com.galemu00.acronyms.ui.fragments
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
-import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,8 +20,8 @@ import com.galemu00.acronyms.databinding.FragmentHomeBinding
 import com.galemu00.acronyms.ui.AcronymsViewModel
 import com.galemu00.acronyms.util.Resource
 
-class HomeFragment : Fragment(R.layout.fragment_home),
-    View.OnClickListener, SearchView.OnCloseListener, SearchView.OnQueryTextListener {
+class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnCloseListener, SearchView
+.OnQueryTextListener {
 
     private val viewModel: AcronymsViewModel by viewModels()
     private var _binding: FragmentHomeBinding? = null
@@ -41,62 +41,85 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         binding.recyclerView.adapter = this.adapter
 
         binding.searchBox.setOnCloseListener(this)
-        binding.searchBox.setOnSearchClickListener(this)
         binding.searchBox.setOnQueryTextListener(this)
 
         viewModel.acronymList.observe(viewLifecycleOwner) { response ->
             when (response) {
                 is Resource.Loading -> {
-                    // TODO loading view
+                    loadingState()
                 }
                 is Resource.Success -> {
-
-                    binding.emptyBackground.visibility = View.GONE
-                    binding.recyclerView.visibility = View.VISIBLE
-                    binding.emptyResult.visibility = View.GONE
-
+                    successResult()
                     hideKeyboard()
-
                     if ((response.data != null) && (response.data.size > 0)) {
                         response.data.forEach { acronymItem ->
                             adapter.differ.submitList(acronymItem.lfs)
                         }
                     } else {
-                        // TODO show empty list
-                        Toast.makeText(context, "empty list", Toast.LENGTH_SHORT).show()
-                        // hide the resycler view
-                        // hide the bank screen
-                        // show text for empty list
-                        binding.recyclerView.visibility = View.GONE
-                        binding.emptyBackground.visibility = View.GONE
-                        binding.emptyResult.visibility = View.VISIBLE
+                        emptyResult()
                     }
                 }
                 is Resource.Error -> {
-                    // TODO show error
+                    errorResult()
                 }
                 is Resource.Idel -> {
-                    if (adapter.differ.currentList.isNotEmpty()){
+                    if (adapter.differ.currentList.isNotEmpty()) {
                         adapter.differ.submitList(ArrayList<Lf>())
                     }
-
+                    defaultUIState()
                 }
                 else -> {
-
-                    Toast.makeText(
-                        context, "back to empty ${adapter.differ.currentList.size}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.emptyBackground.visibility = View.VISIBLE
-                    binding.recyclerView.visibility = View.GONE
-                    binding.emptyResult.visibility = View.GONE
-
-
+                    defaultUIState()
                 }
             }
         }
 
         return binding.root
+    }
+
+    private fun loadingState() {
+        binding.emptyBackground.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.emptyResult.visibility = View.GONE
+        binding.progressBar.visibility = View.VISIBLE
+        binding.errorResult.visibility = View.GONE
+    }
+
+    private fun emptyResult() {
+        binding.recyclerView.visibility = View.GONE
+        binding.emptyBackground.visibility = View.GONE
+        binding.emptyResult.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.GONE
+        binding.errorResult.visibility = View.GONE
+    }
+
+    private fun errorResult() {
+        binding.emptyBackground.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.emptyResult.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
+        binding.errorResult.visibility = View.VISIBLE
+    }
+
+    private fun defaultUIState() {
+        binding.emptyBackground.visibility = View.VISIBLE
+        binding.recyclerView.visibility = View.GONE
+        binding.emptyResult.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
+        binding.errorResult.visibility = View.GONE
+    }
+
+    private fun successResult() {
+        binding.recyclerView.visibility = View.VISIBLE
+        binding.emptyBackground.visibility = View.GONE
+        binding.emptyResult.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
+        binding.errorResult.visibility = View.GONE
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 
     private fun hideKeyboard() {
@@ -105,37 +128,37 @@ class HomeFragment : Fragment(R.layout.fragment_home),
         imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
-    }
-
-
-    override fun onClick(v: View?) {
-        //TODO search box is clicked
-
-        // Toast.makeText(context, "onClose()", Toast.LENGTH_SHORT).show()
-    }
-
     override fun onClose(): Boolean {
         viewModel.clearResults()
-        binding.emptyBackground.visibility = View.VISIBLE
-        binding.recyclerView.visibility = View.GONE
-        binding.emptyResult.visibility = View.GONE
-
+        defaultUIState()
         hideKeyboard()
-
         return true
+    }
+
+    private fun networkCapabilities(): NetworkCapabilities? {
+        val connectivityManager = context?.applicationContext?.getSystemService(
+            Context
+                .CONNECTIVITY_SERVICE
+        ) as ConnectivityManager
+        return connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
         // search method
-        query?.let { search ->
-            viewModel.getAcronyms(search)
+
+        val networkActivityInfo =
+            networkCapabilities()
+
+        if (networkActivityInfo != null) {
+            query?.let { search ->
+                viewModel.getAcronyms(search)
+            }
+        } else {
+            Toast.makeText(context, "No network available", Toast.LENGTH_SHORT).show()
         }
         return true
     }
+
 
     override fun onQueryTextChange(newText: String?): Boolean {
         return false

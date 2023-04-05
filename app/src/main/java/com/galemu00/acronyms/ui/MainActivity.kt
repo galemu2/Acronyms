@@ -1,8 +1,7 @@
 package com.galemu00.acronyms.ui
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.galemu00.acronyms.R
+import androidx.appcompat.app.AppCompatActivity
 import com.galemu00.acronyms.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
